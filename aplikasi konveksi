@@ -1,1 +1,701 @@
 
+import React, { useState, useMemo } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Badge,
+  Separator,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui';
+import { Search, Plus, Edit, Trash2, Package, Scissors, Shirt, Warehouse, CheckCircle } from 'lucide-react';
+
+const FABRIC_TYPES = [
+  'Cotton Light (120gsm)',
+  'Cotton Medium (180gsm)',
+  'Cotton Heavy (240gsm)',
+  'Polyester',
+  'Silk',
+  'Linen',
+  'Wool',
+  'Denim Light',
+  'Denim Heavy',
+  'Jersey',
+  'Rayon',
+  'Spandex/Lycra',
+  'Cotton-Polyester Mix',
+  'Cotton-Spandex Mix'
+];
+
+const ARTICLE_TYPES = [
+  'T-Shirt',
+  'Shirt',
+  'Pants',
+  'Dress',
+  'Jacket',
+  'Skirt',
+  'Shorts',
+  'Blouse'
+];
+
+const COLORS = [
+  'White',
+  'Black',
+  'Navy',
+  'Gray',
+  'Red',
+  'Blue',
+  'Green',
+  'Yellow',
+  'Pink',
+  'Brown'
+];
+
+function GarmentInventorySystem() {
+  // State for fabric inventory
+  const [fabricInventory, setFabricInventory] = useState([
+    { id: 1, fabricType: 'Cotton Medium (180gsm)', weight: 150, rolls: 10, batchId: 'FB001' },
+    { id: 2, fabricType: 'Polyester', weight: 200, rolls: 15, batchId: 'FB002' },
+    { id: 3, fabricType: 'Denim Light', weight: 300, rolls: 8, batchId: 'FB003' }
+  ]);
+
+  // State for cutting table
+  const [cuttingRecords, setCuttingRecords] = useState([
+    { id: 1, fabricType: 'Cotton Medium (180gsm)', quantity: 50, rolls: 2, date: '2024-01-15', operator: 'John Doe' },
+    { id: 2, fabricType: 'Polyester', quantity: 75, rolls: 3, date: '2024-01-15', operator: 'Jane Smith' }
+  ]);
+
+  // State for sewing pickup
+  const [sewingPickup, setSewingPickup] = useState([
+    { id: 1, receiver: 'Alice Brown', quantity: 50, article: 'T-Shirt', date: '2024-01-15' }
+  ]);
+
+  // State for sewing delivery
+  const [sewingDelivery, setSewingDelivery] = useState([
+    { id: 1, quantity: 45, article: 'T-Shirt', date: '2024-01-16', status: 'Completed' }
+  ]);
+
+  // State for warehouse QC
+  const [warehouseQC, setWarehouseQC] = useState([
+    { id: 1, article: 'T-Shirt', quantity: 45, qcStatus: 'In Progress', date: '2024-01-16' }
+  ]);
+
+  // State for ready goods
+  const [readyGoods, setReadyGoods] = useState([
+    { id: 1, article: 'T-Shirt', colors: { 'White': 20, 'Black': 15, 'Navy': 10 }, totalQuantity: 45, status: 'Ready for Sale' }
+  ]);
+
+  // Form states
+  const [showFabricForm, setShowFabricForm] = useState(false);
+  const [showCuttingForm, setShowCuttingForm] = useState(false);
+  const [showPickupForm, setShowPickupForm] = useState(false);
+  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
+  const [showReadyGoodsForm, setShowReadyGoodsForm] = useState(false);
+
+  // Search states
+  const [fabricSearch, setFabricSearch] = useState('');
+  const [cuttingSearch, setCuttingSearch] = useState('');
+  const [pickupSearch, setPickupSearch] = useState('');
+  const [deliverySearch, setDeliverySearch] = useState('');
+  const [readyGoodsSearch, setReadyGoodsSearch] = useState('');
+
+  // Form data states
+  const [fabricFormData, setFabricFormData] = useState({
+    fabricType: '',
+    weight: '',
+    rolls: '',
+    batchId: ''
+  });
+
+  const [cuttingFormData, setCuttingFormData] = useState({
+    fabricType: '',
+    quantity: '',
+    rolls: '',
+    date: new Date().toISOString().split('T')[0],
+    operator: ''
+  });
+
+  const [pickupFormData, setPickupFormData] = useState({
+    receiver: '',
+    quantity: '',
+    article: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+
+  const [deliveryFormData, setDeliveryFormData] = useState({
+    quantity: '',
+    article: '',
+    date: new Date().toISOString().split('T')[0],
+    status: 'Completed'
+  });
+
+  const [readyGoodsFormData, setReadyGoodsFormData] = useState({
+    article: '',
+    colors: {},
+    status: 'Ready for Sale'
+  });
+
+  // Filter functions
+  const filteredFabric = useMemo(() => {
+    return fabricInventory.filter(item =>
+      item.fabricType.toLowerCase().includes(fabricSearch.toLowerCase()) ||
+      item.batchId.toLowerCase().includes(fabricSearch.toLowerCase())
+    );
+  }, [fabricInventory, fabricSearch]);
+
+  const filteredCutting = useMemo(() => {
+    return cuttingRecords.filter(item =>
+      item.fabricType.toLowerCase().includes(cuttingSearch.toLowerCase()) ||
+      item.operator.toLowerCase().includes(cuttingSearch.toLowerCase())
+    );
+  }, [cuttingRecords, cuttingSearch]);
+
+  const filteredPickup = useMemo(() => {
+    return sewingPickup.filter(item =>
+      item.receiver.toLowerCase().includes(pickupSearch.toLowerCase()) ||
+      item.article.toLowerCase().includes(pickupSearch.toLowerCase())
+    );
+  }, [sewingPickup, pickupSearch]);
+
+  const filteredDelivery = useMemo(() => {
+    return sewingDelivery.filter(item =>
+      item.article.toLowerCase().includes(deliverySearch.toLowerCase())
+    );
+  }, [sewingDelivery, deliverySearch]);
+
+  const filteredReadyGoods = useMemo(() => {
+    return readyGoods.filter(item =>
+      item.article.toLowerCase().includes(readyGoodsSearch.toLowerCase())
+    );
+  }, [readyGoods, readyGoodsSearch]);
+
+  // Add functions
+  const addFabric = () => {
+    const newFabric = {
+      id: fabricInventory.length + 1,
+      ...fabricFormData,
+      weight: parseInt(fabricFormData.weight),
+      rolls: parseInt(fabricFormData.rolls)
+    };
+    setFabricInventory([...fabricInventory, newFabric]);
+    setShowFabricForm(false);
+    setFabricFormData({ fabricType: '', weight: '', rolls: '', batchId: '' });
+  };
+
+  const addCutting = () => {
+    const newCutting = {
+      id: cuttingRecords.length + 1,
+      ...cuttingFormData,
+      quantity: parseInt(cuttingFormData.quantity),
+      rolls: parseInt(cuttingFormData.rolls)
+    };
+    setCuttingRecords([...cuttingRecords, newCutting]);
+    setShowCuttingForm(false);
+    setCuttingFormData({ fabricType: '', quantity: '', rolls: '', date: new Date().toISOString().split('T')[0], operator: '' });
+  };
+
+  const addPickup = () => {
+    const newPickup = {
+      id: sewingPickup.length + 1,
+      ...pickupFormData,
+      quantity: parseInt(pickupFormData.quantity)
+    };
+    setSewingPickup([...sewingPickup, newPickup]);
+    setShowPickupForm(false);
+    setPickupFormData({ receiver: '', quantity: '', article: '', date: new Date().toISOString().split('T')[0] });
+  };
+
+  const addDelivery = () => {
+    const newDelivery = {
+      id: sewingDelivery.length + 1,
+      ...deliveryFormData,
+      quantity: parseInt(deliveryFormData.quantity)
+    };
+    setSewingDelivery([...sewingDelivery, newDelivery]);
+    
+    // Add to warehouse QC
+    const newQC = {
+      id: warehouseQC.length + 1,
+      article: deliveryFormData.article,
+      quantity: parseInt(deliveryFormData.quantity),
+      qcStatus: 'In Progress',
+      date: deliveryFormData.date
+    };
+    setWarehouseQC([...warehouseQC, newQC]);
+    
+    setShowDeliveryForm(false);
+    setDeliveryFormData({ quantity: '', article: '', date: new Date().toISOString().split('T')[0], status: 'Completed' });
+  };
+
+  const addReadyGoods = () => {
+    const totalQuantity = Object.values(readyGoodsFormData.colors).reduce((sum, qty) => sum + parseInt(qty || 0), 0);
+    const newGoods = {
+      id: readyGoods.length + 1,
+      article: readyGoodsFormData.article,
+      colors: readyGoodsFormData.colors,
+      totalQuantity,
+      status: readyGoodsFormData.status
+    };
+    setReadyGoods([...readyGoods, newGoods]);
+    setShowReadyGoodsForm(false);
+    setReadyGoodsFormData({ article: '', colors: {}, status: 'Ready for Sale' });
+  };
+
+  // Delete functions
+  const deleteFabric = (id) => {
+    setFabricInventory(fabricInventory.filter(item => item.id !== id));
+  };
+
+  const deleteCutting = (id) => {
+    setCuttingRecords(cuttingRecords.filter(item => item.id !== id));
+  };
+
+  // Dashboard calculations
+  const totalFabricWeight = fabricInventory.reduce((sum, item) => sum + item.weight, 0);
+  const totalFabricRolls = fabricInventory.reduce((sum, item) => sum + item.rolls, 0);
+  const totalCuttingToday = cuttingRecords.filter(item => item.date === new Date().toISOString().split('T')[0]).length;
+  const totalReadyGoods = readyGoods.reduce((sum, item) => sum + item.totalQuantity, 0);
+  const itemsInQC = warehouseQC.filter(item => item.qcStatus === 'In Progress').length;
+
+  return (
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-2">Garment Inventory Management System</h1>
+        <p className="text-muted-foreground">Manage your textile manufacturing inventory and production workflow</p>
+      </div>
+
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList className="grid grid-cols-6 w-full">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="fabric">Fabric Inventory</TabsTrigger>
+          <TabsTrigger value="cutting">Cutting Table</TabsTrigger>
+          <TabsTrigger value="sewing">Sewing</TabsTrigger>
+          <TabsTrigger value="warehouse">Warehouse QC</TabsTrigger>
+          <TabsTrigger value="ready">Ready Goods</TabsTrigger>
+        </TabsList>
+
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Fabric Stock</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalFabricWeight} kg</div>
+                <p className="text-xs text-muted-foreground">{totalFabricRolls} rolls in inventory</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Today's Cutting</CardTitle>
+                <Scissors className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalCuttingToday}</div>
+                <p className="text-xs text-muted-foreground">cutting operations today</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Items in QC</CardTitle>
+                <Warehouse className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{itemsInQC}</div>
+                <p className="text-xs text-muted-foreground">awaiting quality check</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ready Goods</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalReadyGoods}</div>
+                <p className="text-xs text-muted-foreground">items ready for sale</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">New fabric batch added</p>
+                    <p className="text-xs text-muted-foreground">Cotton Medium (180gsm) - 150kg</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">2 hours ago</p>
+                </div>
+                <Separator />
+                <div className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Cutting operation completed</p>
+                    <p className="text-xs text-muted-foreground">75 pieces of Polyester</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">3 hours ago</p>
+                </div>
+                <Separator />
+                <div className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Items in quality control</p>
+                    <p className="text-xs text-muted-foreground">45 T-Shirts awaiting QC</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">5 hours ago</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Fabric Inventory Tab */}
+        <TabsContent value="fabric" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Fabric Inventory</CardTitle>
+                  <CardDescription>Manage your fabric stock and batches</CardDescription>
+                </div>
+                <Button onClick={() => setShowFabricForm(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Fabric
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by fabric type or batch ID..."
+                    value={fabricSearch}
+                    onChange={(e) => setFabricSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Batch ID</TableHead>
+                    <TableHead>Fabric Type</TableHead>
+                    <TableHead>Weight (kg)</TableHead>
+                    <TableHead>Rolls</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFabric.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.batchId}</TableCell>
+                      <TableCell>{item.fabricType}</TableCell>
+                      <TableCell>{item.weight}</TableCell>
+                      <TableCell>{item.rolls}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Fabric Batch</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete batch {item.batchId}? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteFabric(item.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Fabric Form Modal */}
+          {showFabricForm && (
+            <Card className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-md w-full z-50">
+              <CardHeader>
+                <CardTitle>Add New Fabric Batch</CardTitle>
+                <CardDescription>Enter fabric batch details</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="batchId">Batch ID</Label>
+                    <Input
+                      id="batchId"
+                      value={fabricFormData.batchId}
+                      onChange={(e) => setFabricFormData({...fabricFormData, batchId: e.target.value})}
+                      placeholder="e.g., FB001"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="fabricType">Fabric Type</Label>
+                    <Select
+                      value={fabricFormData.fabricType}
+                      onValueChange={(value) => setFabricFormData({...fabricFormData, fabricType: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select fabric type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FABRIC_TYPES.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="weight">Weight (kg)</Label>
+                    <Input
+                      id="weight"
+                      type="number"
+                      value={fabricFormData.weight}
+                      onChange={(e) => setFabricFormData({...fabricFormData, weight: e.target.value})}
+                      placeholder="Enter weight in kg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="rolls">Number of Rolls</Label>
+                    <Input
+                      id="rolls"
+                      type="number"
+                      value={fabricFormData.rolls}
+                      onChange={(e) => setFabricFormData({...fabricFormData, rolls: e.target.value})}
+                      placeholder="Enter number of rolls"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setShowFabricForm(false)}>Cancel</Button>
+                    <Button onClick={addFabric}>Add Fabric</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {showFabricForm && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowFabricForm(false)} />}
+        </TabsContent>
+
+        {/* Cutting Table Tab */}
+        <TabsContent value="cutting" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Cutting Table (Tabel Pemotongan)</CardTitle>
+                  <CardDescription>Track fabric cutting operations</CardDescription>
+                </div>
+                <Button onClick={() => setShowCuttingForm(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Cutting Record
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by fabric type or operator..."
+                    value={cuttingSearch}
+                    onChange={(e) => setCuttingSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Fabric Type</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Rolls Cut</TableHead>
+                    <TableHead>Operator</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCutting.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.date}</TableCell>
+                      <TableCell>{item.fabricType}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.rolls}</TableCell>
+                      <TableCell>{item.operator}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Cutting Record</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this cutting record? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteCutting(item.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Cutting Form Modal */}
+          {showCuttingForm && (
+            <Card className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-md w-full z-50">
+              <CardHeader>
+                <CardTitle>Add Cutting Record</CardTitle>
+                <CardDescription>Enter cutting operation details</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="cuttingDate">Date</Label>
+                    <Input
+                      id="cuttingDate"
+                      type="date"
+                      value={cuttingFormData.date}
+                      onChange={(e) => setCuttingFormData({...cuttingFormData, date: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cuttingFabric">Fabric Type</Label>
+                    <Select
+                      value={cuttingFormData.fabricType}
+                      onValueChange={(value) => setCuttingFormData({...cuttingFormData, fabricType: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select fabric type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fabricInventory.map(fabric => (
+                          <SelectItem key={fabric.id} value={fabric.fabricType}>
+                            {fabric.fabricType} (Available: {fabric.weight}kg)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="cuttingQuantity">Cutting Quantity</Label>
+                    <Input
+                      id="cuttingQuantity"
+                      type="number"
+                      value={cuttingFormData.quantity}
+                      onChange={(e) => setCuttingFormData({...cuttingFormData, quantity: e.target.value})}
+                      placeholder="Number of pieces cut"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cuttingRolls">Rolls Cut</Label>
+                    <Input
+                      id="cuttingRolls"
+                      type="number"
+                      value={cuttingFormData.rolls}
+                      onChange={(e) => setCuttingFormData({...cuttingFormData, rolls: e.target.value})}
+                      placeholder="Number of fabric rolls used"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="operator">Operator Name</Label>
+                    <Input
+                      id="operator"
+                      value={cuttingFormData.operator}
+                      onChange={(e) => setCuttingFormData({...cuttingFormData, operator: e.target.value})}
+                      placeholder="Enter operator name"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setShowCuttingForm(false)}>Cancel</Button>
+                    <Button onClick={addCutting}>Add Record</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {showCuttingForm && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowCuttingForm(false)} />}
+        </TabsContent>
+
+        {/* Sewing Tab */}
+        <TabsContent value="sewing" className="space-y-4">
+          <div className="grid gap-4">
+            {/* Sewing Pickup Table */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Sewing Pickup (Pengambilan Penjahitan)</CardTitle>
+                    <CardDescription>Track items picked up for sewing</CardDescription>
+                  </div>
+                  <Button onClick
+
